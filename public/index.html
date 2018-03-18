@@ -4,11 +4,19 @@
     <title>Simple Map</title>
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDY1TOXc0sHvJlrEzyPvGSpqzdU3H-9-Uk&libraries=places&callback=mapLocation"></script>
     <link rel="StyleSheet" href="stylesheets/style.css" type="text/css">
   </head>
   <body>
+    <form id="formPoints">
+      <input id="origin-input" class="controls" type="text" placeholder="Elige un punto de partida">
+      <input id="destination-input" class="controls" type="text" placeholder="Enter a destination location">
+    </form>
+    <div id="informe">
+
+    </div>
     <div id="map"></div>
-    <script src="javascripts/map.js"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDY1TOXc0sHvJlrEzyPvGSpqzdU3H-9-Uk&callback=initMap"></script>
+    <script src="javascripts/map2.js"></script>
   </body>
 </html>

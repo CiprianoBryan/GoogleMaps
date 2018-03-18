@@ -1,9 +1,75 @@
-#map {
-  height: 100%;
-}
-/* Optional: Makes the sample page fill the window. */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+#map {
+  height: 100%;
+  width: 60%;
+  margin: 0px;
+  padding: 0px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+}
+
+#formPoints {
+  position: absolute;
+  top:0%;
+  height: 50%;
+  width: 40%;
+  background-color: #4285F4 !important;
+}
+
+#informe {
+  position: absolute;
+  top:50%;
+  height: 10px;
+  width: 40%;
+  background-color: white;
+}
+
+.controls {
+  margin-top: 10px;
+  border: 1px solid transparent;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  position: absolute;
+}
+
+#origin-input, #destination-input {
+  background-color: inherit;
+  font-family: Roboto;
+  color: white;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 10%;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 300px;
+  border-bottom-width:1px;
+  border-bottom-style:solid;
+  border-bottom-color:white;
+}
+
+::placeholder {
+  color: #ecf0f1;
+  font-size: 13px;
+}
+
+#origin-input:focus, #destination-input:focus {
+  border-color: #4d90fe;
+}
+
+#origin-input {
+  top: 15%;
+}
+
+#destination-input {
+  top: 30%;
 }
