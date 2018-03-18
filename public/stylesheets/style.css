@@ -40,9 +40,7 @@ html, body {
   outline: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   position: absolute;
-}
 
-#origin-input, #destination-input {
   background-color: inherit;
   font-family: Roboto;
   color: white;
@@ -62,14 +60,26 @@ html, body {
   font-size: 13px;
 }
 
-#origin-input:focus, #destination-input:focus {
-  border-color: #4d90fe;
+.controls:focus {
+  border-bottom-color: #1f52a3;
 }
 
-#origin-input {
-  top: 15%;
+#point1 {
+  top: 20px;
 }
 
-#destination-input {
+#point2 {
   top: 30%;
+}
+#point3 {
+  top: 41%;
+}
+#point4 {
+  top: 52%;
+}
+#point5 {
+  top: 63%;
+}
+#point6 {
+  top: 74%;
 }
