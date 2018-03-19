@@ -1,24 +1,4 @@
 function mapLocation() {
-
-  function initialize() {
-    var infoWindow = new google.maps.InfoWindow({map: map});
-    function myPosition() {
-      var coordinate = null;
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          coordinate = position.coords;
-        }, function() {});
-      }
-      return coordinate;
-    }
-    var ParqueJohnFKennedy = new google.maps.LatLng(-12.1220124, -77.0307685);
-    var map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 16,
-      center: ParqueJohnFKennedy
-    });
-    new AutocompleteDirectionsHandler(map);
-  }
-
   function getIconMarker(feature) {
     let iconBase = 'http://maps.google.com/mapfiles/kml/';
     var icons = {
@@ -40,35 +20,59 @@ function mapLocation() {
 
   var pointName = ['point1', 'point2', 'point3', 'point4', 'point5', 'point6'];
 
+  /*------------------------- INIT PROJECT ---------------------- */
+
+  function initialize() {
+    var infoWindow = new google.maps.InfoWindow({map: map});
+    function myPosition() {
+      var coordinate = null;
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          coordinate = position.coords;
+        }, function() {});
+      }
+      return coordinate;
+    }
+    var ParqueJohnFKennedy = new google.maps.LatLng(-12.1220124, -77.0307685);
+    var map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 16,
+      center: ParqueJohnFKennedy
+    });
+    new AutocompleteDirectionsHandler(map);
+  }
+
   function AutocompleteDirectionsHandler(map) {
     this.map = map;
     this.pointPlaceId = [null, null, null, null, null, null];
-    this.travelMode = 'WALKING';
+    this.directionsService = new google.maps.DirectionsService;
+    this.directionsDisplay = new google.maps.DirectionsRenderer;
 
     var pointInput = [null, null, null, null, null, null];
     for(let i = 0; i <= 5; i ++) {
       pointInput[i] = document.getElementById(pointName[i]);
     }
-
-    this.directionsService = new google.maps.DirectionsService;
-    this.directionsDisplay = new google.maps.DirectionsRenderer;
-    this.directionsDisplay.setOptions({
-      draggable: true,
-      markerOptions: {
-        // icon: getIconMarker('mark'),
-        animation: google.maps.Animation.DROP,
-      }
-    });
-    this.directionsDisplay.setMap(map);
-    
     var pointAutocomplete = [];
     for(let i = 0; i <= 5; i ++) {
       pointAutocomplete[i] = new google.maps.places.Autocomplete(pointInput[i], {placeIdOnly: true});
     }
 
+    this.directionsDisplay.setOptions({
+      map: map,
+      draggable: true,
+      panel: document.getElementById('panel'),
+      markerOptions: {
+        // icon: getIconMarker('mark'),
+        animation: google.maps.Animation.DROP,
+      }
+    });
     for(let i = 0; i <= 5; i ++) {
       this.setupPlaceChangedListener(pointAutocomplete[i], i);
     }
+    // this.directionsDisplay.addListener('directions_changed', computeTotalDistance);
+    
+    // this.directionsDisplay.addListener('directions_changed', function() {
+    //   computeTotalDistance(this.directionsDisplay.getDirections());
+    // });
   }
 
   AutocompleteDirectionsHandler.prototype.setupPlaceChangedListener = function(autocomplete, index) {
@@ -85,29 +89,56 @@ function mapLocation() {
     });
   };
 
-  AutocompleteDirectionsHandler.prototype.route = function() {
-    for(let i = 1; i <= 5; i ++) {
+  AutocompleteDirectionsHandler.prototype.route = function () {
+    for( let i = 1; i <= 5; i ++ ) {
       if( this.pointPlaceId[i] && !this.pointPlaceId[i-1] ) {
         alert("Falta ingresar el anterior punto");
         return;
       }
     }
-    var me = this;
-    for(let i = 1; i <= 5; i ++) {
-      this.directionsService.route({
-        origin: {'placeId': this.pointPlaceId[i-1]},
-        destination: {'placeId': this.pointPlaceId[i]},
-        travelMode: this.travelMode
-      }, function(response, status) {
-        if (status === 'OK') {
-          me.directionsDisplay.setDirections(response);
-          me.directionsDisplay.setRouteIndex(i);
-        } else {
-          window.alert('Directions request failed due to ' + status);
-        }
+    var n = 1;
+    for( ; n <= 5; n ++ ) {
+      if( !this.pointPlaceId[n] ) {
+        break;
+      }
+    }
+    var waypoints = [];
+    for(let i = 1 ; i < n - 1; i ++) {
+      waypoints.push({
+        location: {'placeId': this.pointPlaceId[i]}
       });
     }
+    var me = this;
+    this.directionsService.route({
+      origin: {'placeId': this.pointPlaceId[0]},
+      destination: {'placeId': this.pointPlaceId[n-1]},
+      waypoints: waypoints,
+      travelMode: 'WALKING',
+      // transitOptions: TransitOptions,
+      // drivingOptions: DrivingOptions,
+      // unitSystem: UnitSystem,
+      // avoidHighways: Boolean,
+      // avoidTolls: true
+    }, function(response, status) {
+      if (status === 'OK') {
+        me.directionsDisplay.setDirections(response);
+
+      } else {
+        window.alert('Directions request failed due to ' + status);
+      }
+    });
   };
+
+  function computeTotalDistance(result) {
+    var total = 0;
+    alert("compute distance");
+    var myroute = result.routes[0];
+    for (var i = 0; i < myroute.legs.length; i++) {
+      total += myroute.legs[i].distance.value;
+    }
+    total = total / 1000;
+    document.getElementById('total').innerHTML = total + ' km';
+  }
   
   google.maps.event.addDomListener(window, 'load', initialize);
 }

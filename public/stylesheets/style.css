@@ -22,7 +22,7 @@ html, body {
   background-color: #4285F4 !important;
 }
 
-#informe {
+#panel {
   position: absolute;
   top:50%;
   height: 10px;
