@@ -20,27 +20,38 @@ function myPosition() {
 }
 
 function computeTotalDistance(result) {
-  let total = 0;
+  let totalDistance = 0;
+  let totalDuration = 0;
   let myroute = result.routes[0];
-  for (let i = 0; i < myroute.legs.length; i++) {
-    total += myroute.legs[i].distance.value;
+  for (let i=0; i < nroPoints-1; i++) {
+    totalDistance += myroute.legs[i].distance.value;
+    totalDuration += myroute.legs[i].duration.value;
+    document.getElementById(pointName[i]).value = myroute.legs[i].start_address;
+    if(i == myroute.legs.length-1) {
+      document.getElementById(pointName[i+1]).value = myroute.legs[i].end_address;
+    }
   }
-  total = total / 1000;
-  document.getElementById('total').innerHTML = total + ' km';
+  totalDuration = totalDuration / 60;
+  totalDistance = totalDistance / 1000;
+  document.getElementById('total').innerHTML = totalDistance + ' km';
 }
 
 var pointName;
 var directionsService;
 var directionsDisplay;
 var pointPlaceId;
+var formPoints;
+var buttonAdd;
+var nroPoints;
 var map;
 /*------------------------- INIT PROJECT ---------------------- */
 
 function initialize() {
-  pointName = ['point1', 'point2', 'point3', 'point4', 'point5', 'point6'];
+  nroPoints = 0;
+  pointPlaceId = [null, null];
+  pointName = ['point1', 'point2'];
   directionsService = new google.maps.DirectionsService;
   directionsDisplay = new google.maps.DirectionsRenderer;
-  pointPlaceId = [null, null, null, null, null, null];
   var ParqueJohnFKennedy = new google.maps.LatLng(-12.1220124, -77.0307685);
   map = new google.maps.Map(document.getElementById('map'), {
     zoom: 16,
@@ -51,21 +62,40 @@ function initialize() {
     draggable: true,
     panel: document.getElementById('panel'),
     markerOptions: {
-      animation: google.maps.Animation.DROP,
+      // draggable:true
+      // animation: google.maps.Animation.DROP,
     }
   });
   directionsDisplay.addListener('directions_changed', function() {
     computeTotalDistance(directionsDisplay.getDirections());
   });
-  AutocompleteDirectionsHandler();
+  AutocompleteDirectionsHandler(0);
+  AutocompleteDirectionsHandler(1);
+  buttonAdd = document.getElementById('buttonAdd');
+  formPoints = document.getElementById('formPoints');
+  buttonAdd.addEventListener('click', pressButtonAdd, false);
 }
 
-function AutocompleteDirectionsHandler() {
-  for(let i = 0; i <= 5; i ++) {
-    pointInput = document.getElementById(pointName[i]);
-    pointAutocomplete = new google.maps.places.Autocomplete(pointInput, {placeIdOnly: true});
-    setupPlaceChangedListener(pointAutocomplete, i);
+function pressButtonAdd(event) {
+  if(pointPlaceId.length != nroPoints) {
+    return;
   }
+  var input = document.createElement('input');
+  var newId = 'point' + (nroPoints + 1);
+  pointPlaceId.push(null);
+  pointName.push(newId);
+  input.setAttribute('id', newId);
+  input.setAttribute('class', 'controls');
+  input.setAttribute('placeholder', "Elige un destino");
+  formPoints.insertBefore(input, buttonAdd);
+  buttonAdd.setAttribute('class', 'disabled');
+  AutocompleteDirectionsHandler(nroPoints);
+}
+
+function AutocompleteDirectionsHandler(index) {
+  pointInput = document.getElementById(pointName[index]);
+  pointAutocomplete = new google.maps.places.Autocomplete(pointInput, {placeIdOnly: true});
+  setupPlaceChangedListener(pointAutocomplete, index);
 }
 
 function setupPlaceChangedListener(autocomplete, index) {
@@ -76,34 +106,26 @@ function setupPlaceChangedListener(autocomplete, index) {
       alert("Please select an option from the dropdown list.");
       return;
     }
+    nroPoints ++;
+    if(nroPoints >= 2) {
+      buttonAdd.removeAttribute('class');
+      buttonAdd.style.cursor = 'pointer';
+    }
     pointPlaceId[index] = place.place_id;
-    displayRoute();
+    displayRoute(nroPoints);
   });
 };
 
 function displayRoute() {
-  for( let i = 1; i <= 5; i ++ ) {
-    if( pointPlaceId[i] && !pointPlaceId[i-1] ) {
-      alert("Falta ingresar el anterior punto");
-      pointPlaceId[i] = null;
-      return;
-    }
-  }
-  var n = 1;
-  for( ; n <= 5; n ++ ) {
-    if( !pointPlaceId[n] ) {
-      break;
-    }
-  }
   let waypoints = [];
-  for(let i = 1 ; i < n - 1; i ++) {
+  for(let i = 1 ; i < nroPoints-1; i ++) {
     waypoints.push({
       location: {'placeId': this.pointPlaceId[i]}
     });
   }
   directionsService.route({
     origin: {'placeId': pointPlaceId[0]},
-    destination: {'placeId': pointPlaceId[n-1]},
+    destination: {'placeId': pointPlaceId[nroPoints-1]},
     waypoints: waypoints,
     travelMode: 'DRIVING',
     // transitOptions: TransitOptions,
@@ -119,3 +141,5 @@ function displayRoute() {
     }
   });
 };
+
+window.addEventListener('load',initialize,false);
