@@ -88,6 +88,7 @@ function pressButtonAdd(event) {
   input.setAttribute('class', 'controls');
   input.setAttribute('placeholder', "Elige un destino");
   formPoints.insertBefore(input, buttonAdd);
+  buttonAdd.style.cursor = 'not-allowed';
   buttonAdd.setAttribute('class', 'disabled');
   AutocompleteDirectionsHandler(nroPoints);
 }
