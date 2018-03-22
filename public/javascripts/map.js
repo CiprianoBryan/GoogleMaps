@@ -32,6 +32,7 @@ function computeTotalDistance(result) {
   let totalDistance = 0;
   let totalDuration = 0;
   let myroute = result.routes[0];
+  let order = result.routes[0].waypoint_order;
   let waypoints = result.geocoded_waypoints;
   for (let i=0; i < waypoints.length; i++) {
     updateLocation({'placeId': waypoints[i].place_id}, i);
@@ -51,8 +52,9 @@ var geocoder;
 var directionsService;
 var directionsDisplay;
 var pointLocation;
-var formPoints;
+// var buttonOptimate;
 var buttonAdd;
+var formPoints;
 var nroPoints;
 var map;
 /*------------------------- INIT PROJECT ---------------------- */
@@ -74,6 +76,11 @@ function initialize() {
     map: map,
     draggable: true,
     panel: document.getElementById('panel'),
+    polylineOptions: {
+      clickable: false,
+      strokeColor: '#2C6DAC',
+      strokeWeight: 4
+    },
     markerOptions: {
       // draggable:true
       // animation: google.maps.Animation.DROP,
@@ -82,8 +89,10 @@ function initialize() {
   AutocompleteDirectionsHandler(0);
   AutocompleteDirectionsHandler(1);
   buttonAdd = document.getElementById('buttonAdd');
+  // buttonOptimate = document.getElementById('buttonOptimate');
   formPoints = document.getElementById('formPoints');
   buttonAdd.addEventListener('click', pressButtonAdd, false);
+  // buttonOptimate.addEventListener('click', pressButtonOptimate, false);
   directionsDisplay.addListener('directions_changed', function() {
     computeTotalDistance(directionsDisplay.getDirections());
   });
@@ -108,6 +117,15 @@ function pressButtonAdd(event) {
   AutocompleteDirectionsHandler(nroPoints);
 }
 
+// function pressButtonOptimate(event) {
+//   var orderedPointLocation = pointLocation;
+//   for(let i=nroPoints-1; i >= 1; i --) {
+//     swap(pointLocation[i], pointLocation[nroPoints-1]);
+//     alert(pointLocation[i]);
+//     alert(orderedPointLocation[i]);
+//   }
+// }
+
 function AutocompleteDirectionsHandler(index) {
   pointInput = document.getElementById(pointName[index]);
   pointAutocomplete = new google.maps.places.Autocomplete(pointInput);
@@ -129,11 +147,11 @@ function setupPlaceChangedListener(autocomplete, index) {
       buttonAdd.setAttribute('class', 'enabled');
     }
     pointLocation[index] = place.geometry.location;
-    displayRoute();
+    displayRoute(false);
   });
 };
 
-function displayRoute() {
+function displayRoute(isOptime) {
   if(nroPoints == 1) {
     addMarker(pointLocation[0]);
     return;
@@ -152,6 +170,7 @@ function displayRoute() {
     destination: pointLocation[nroPoints-1],
     waypoints: waypoints,
     travelMode: 'DRIVING',
+    // optimizeWaypoints: isOptime
   }, function(response, status) {
     if (status === 'OK') {
       directionsDisplay.setDirections(response);
