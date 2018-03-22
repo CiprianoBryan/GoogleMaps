@@ -101,3 +101,7 @@ html, body {
   opacity: 0.5;
   transform: translateY(0px);
 }
+
+.enabled {
+  cursor: pointer;
+}
