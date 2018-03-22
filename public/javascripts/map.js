@@ -9,6 +9,21 @@ function getIconMarker(feature) {
   return iconBase + icons[feature];
 }
 
+function geocodePlaceId(placeId) {
+  geocoder.geocode({'placeId': placeId}, function(results, status) {
+    if (status === 'OK') {
+      if (results[0]) {
+        map.setCenter(results[0].geometry.location);
+        markerInit.setOptions({
+          map: map,
+          draggable: true,
+          position: results[0].geometry.location
+        });
+      }
+    }
+  });
+}
+
 function myPosition() {
   var coordinate = null;
   if (navigator.geolocation) {
@@ -36,7 +51,9 @@ function computeTotalDistance(result) {
   document.getElementById('total').innerHTML = totalDistance + ' km';
 }
 
+var markerInit;
 var pointName;
+var geocoder;
 var directionsService;
 var directionsDisplay;
 var pointPlaceId;
@@ -48,8 +65,10 @@ var map;
 
 function initialize() {
   nroPoints = 0;
+  markerInit = new google.maps.Marker;
   pointPlaceId = [null, null];
   pointName = ['point1', 'point2'];
+  geocoder = new google.maps.Geocoder;
   directionsService = new google.maps.DirectionsService;
   directionsDisplay = new google.maps.DirectionsRenderer;
   var ParqueJohnFKennedy = new google.maps.LatLng(-12.1220124, -77.0307685);
@@ -74,6 +93,18 @@ function initialize() {
   buttonAdd = document.getElementById('buttonAdd');
   formPoints = document.getElementById('formPoints');
   buttonAdd.addEventListener('click', pressButtonAdd, false);
+
+  markerInit.addListener('mouseup', function() {
+    geocoder.geocode({
+      location: markerInit.position
+    }, function(results, status) {
+      if (status === 'OK') {
+        if (results[0]) {
+          document.getElementById(pointName[0]).value = results[0].formatted_address;
+        }
+      }
+    });
+  });
 }
 
 function pressButtonAdd(event) {
@@ -107,21 +138,30 @@ function setupPlaceChangedListener(autocomplete, index) {
       alert("Please select an option from the dropdown list.");
       return;
     }
-    nroPoints ++;
+    if(!pointPlaceId[index]) {
+      nroPoints ++;
+    }
     if(nroPoints >= 2) {
       buttonAdd.removeAttribute('class');
       buttonAdd.style.cursor = 'pointer';
     }
     pointPlaceId[index] = place.place_id;
-    displayRoute(nroPoints);
+    displayRoute();
   });
 };
 
 function displayRoute() {
+  if(nroPoints == 1) {
+    geocodePlaceId(pointPlaceId[0]);
+    return;
+  }
+  if(nroPoints == 2) {
+    markerInit.setMap(null);
+  }
   let waypoints = [];
   for(let i = 1 ; i < nroPoints-1; i ++) {
     waypoints.push({
-      location: {'placeId': this.pointPlaceId[i]}
+      location: {'placeId': pointPlaceId[i]}
     });
   }
   directionsService.route({
