@@ -8,12 +8,19 @@ function myPosition() {
   return coordinate;
 }
 
-function addMarker(location) {
-  map.setCenter(location);
-  markerInit.setOptions({
-    map: map,
-    draggable: true,
-    position: location
+function addMarker(address) {
+  geocoder.geocode({'address': address}, function(results, status) {
+    if (status === 'OK') {
+      if (results[0]) {
+        let location = results[0].geometry.location;
+        map.setCenter(location);
+        markerInit.setOptions({
+          map: map,
+          draggable: true,
+          position: location
+        });
+      }
+    }
   });
 }
 
@@ -21,8 +28,8 @@ function updateLocation(request, index) {
   geocoder.geocode(request, function(results, status) {
     if (status === 'OK') {
       if (results[0]) {
-        pointLocation[index] = results[0].geometry.location;
-        document.getElementById(pointName[index]).value = results[0].formatted_address;
+        pointAddress[index] = results[0].formatted_address;
+        document.getElementById(pointName[index]).value = pointAddress[index];
       }
     }
   });
@@ -33,9 +40,9 @@ function computeTotalDistance(result) {
   let totalDuration = 0;
   let myroute = result.routes[0];
   let order = result.routes[0].waypoint_order;
-  let waypoints = result.geocoded_waypoints;
-  for (let i=0; i < waypoints.length; i++) {
-    updateLocation({'placeId': waypoints[i].place_id}, i);
+  let waypts = result.geocoded_waypoints;
+  for (let i=0; i < waypts.length; i++) {
+    updateLocation({'placeId': waypts[i].place_id}, i);
   }
   for (let i=0; i < nroPoints-1; i++) {
     totalDistance += myroute.legs[i].distance.value;
@@ -51,7 +58,7 @@ var pointName;
 var geocoder;
 var directionsService;
 var directionsDisplay;
-var pointLocation;
+var pointAddress;
 // var buttonOptimate;
 var buttonAdd;
 var formPoints;
@@ -62,7 +69,7 @@ var map;
 function initialize() {
   nroPoints = 0;
   markerInit = new google.maps.Marker;
-  pointLocation = [null, null];
+  pointAddress = [null, null];
   pointName = ['point1', 'point2'];
   geocoder = new google.maps.Geocoder;
   directionsService = new google.maps.DirectionsService;
@@ -97,17 +104,17 @@ function initialize() {
     computeTotalDistance(directionsDisplay.getDirections());
   });
   markerInit.addListener('mouseup', function() {
-    updateLocation({location: markerInit.position}, 0);
+    updateLocation({'location': markerInit.position}, 0);
   });
 }
 
 function pressButtonAdd(event) {
-  if(pointLocation.length != nroPoints) {
+  if(pointAddress.length != nroPoints) {
     return;
   }
   var input = document.createElement('input');
   var newId = 'point' + (nroPoints + 1);
-  pointLocation.push(null);
+  pointAddress.push(null);
   pointName.push(newId);
   input.setAttribute('id', newId);
   input.setAttribute('class', 'controls');
@@ -136,39 +143,39 @@ function setupPlaceChangedListener(autocomplete, index) {
   autocomplete.bindTo('bounds', map);
   autocomplete.addListener('place_changed', function() {
     var place = autocomplete.getPlace();
-    if (!place.geometry) {
+    if (!place.formatted_address) {
       alert("Please select an option from the dropdown list.");
       return;
     }
-    if(!pointLocation[index]) {
+    if(!pointAddress[index]) {
       nroPoints ++;
     }
     if(nroPoints >= 2) {
       buttonAdd.setAttribute('class', 'enabled');
     }
-    pointLocation[index] = place.geometry.location;
+    pointAddress[index] = place.formatted_address;
     displayRoute(false);
   });
 };
 
 function displayRoute(isOptime) {
   if(nroPoints == 1) {
-    addMarker(pointLocation[0]);
+    addMarker(pointAddress[0]);
     return;
   }
   if(nroPoints == 2) {
     markerInit.setMap(null);
   }
-  let waypoints = [];
+  let waypts = [];
   for(let i = 1 ; i < nroPoints-1; i ++) {
-    waypoints.push({
-      location: pointLocation[i]
+    waypts.push({
+      location: pointAddress[i]
     });
   }
   directionsService.route({
-    origin: pointLocation[0],
-    destination: pointLocation[nroPoints-1],
-    waypoints: waypoints,
+    origin: pointAddress[0],
+    destination: pointAddress[nroPoints-1],
+    waypoints: waypts,
     travelMode: 'DRIVING',
     // optimizeWaypoints: isOptime
   }, function(response, status) {
