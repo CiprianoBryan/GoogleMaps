@@ -38,7 +38,6 @@ function updateLocation(request, index) {
 function computeTotalDistance(result) {
   totalDistance = 0;
   let myroute = result.routes[0];
-  let order = result.routes[0].waypoint_order;
   let waypts = result.geocoded_waypoints;
   for (let i=0; i < waypts.length; i++) {
     updateLocation({'placeId': waypts[i].place_id}, i);
@@ -119,31 +118,58 @@ function pressButtonAdd(event) {
   AutocompleteDirectionsHandler(nroPoints);
 }
 
+var pointAddressOrig;
 function pressButtonOptimate(event) {
-  let pointAddressOrig = pointAddress.slice();
-  let index = nroPoints-1 , minDistance = totalDistance;
-  for(let i=nroPoints-1; i >= 1; i --) {
-    let tmp = pointAddress[i];
-    pointAddress[i] = pointAddress[nroPoints-1];
-    pointAddress[nroPoints-1] = tmp;
-    asyncDisplayRoute( callback );
-    if(minDistance > totalDistance) {
-      minDistance = totalDistance;
-      index = i;
-    }
-    pointAddress = pointAddressOrig.slice();
+  pointAddressOrig = pointAddress.slice();
+  searchRoute(totalDistance, nroPoints-1, nroPoints-1);
+}
+
+function searchRoute(minDistance, index, i) {
+  pointAddress = pointAddressOrig.slice();
+  let j = i;
+  if(i == 0) {
+    j = index;
   }
-  let tmp = pointAddress[index];
-  pointAddress[index] = pointAddress[nroPoints-1];
+  let tmp = pointAddress[j];
+  pointAddress[j] = pointAddress[nroPoints-1];
   pointAddress[nroPoints-1] = tmp;
-  displayRoute(true);
-}
-
-function asyncDisplayRoute( callback ) {
-}
-
-function callback() {
-  displayRoute(true);
+  let waypts = [];
+  for(let i = 1 ; i < nroPoints-1; i ++) {
+    waypts.push({
+      location: pointAddress[i]
+    });
+  }
+  directionsService.route({
+    origin: pointAddress[0],
+    destination: pointAddress[nroPoints-1],
+    waypoints: waypts,
+    travelMode: 'DRIVING',
+    optimizeWaypoints: true
+  }, function(result, status) {
+    if (status === 'OK') {
+      let myroute = result.routes[0];
+      if(i == 0) {
+        let order = myroute.waypoint_order;
+        let pointAddressCopy = pointAddress.slice();
+        for(let i=1; i <= nroPoints-2; i ++) {
+          pointAddress[i] = pointAddressCopy[order[i-1]+1];
+          document.getElementById(pointName[i]).value = pointAddress[i];
+        }
+        displayRoute(true);
+        return;
+      }
+      let currDistance = 0;
+      for (let i=0; i < nroPoints-1; i++) {
+        currDistance += myroute.legs[i].distance.value;
+      }
+      currDistance = currDistance/1000;
+      if(minDistance > currDistance) {
+        minDistance = currDistance;
+        index = i;
+      }
+      searchRoute(minDistance, index, i-1);
+    }
+  });
 }
 
 function AutocompleteDirectionsHandler(index) {
