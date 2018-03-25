@@ -87,7 +87,7 @@ html, body {
   outline: none;
 }
 
-/* #buttonOptimate {
+#buttonOptimate {
   border-radius: 5%;
   height: 30px;
   width: 120px;
@@ -103,13 +103,13 @@ html, body {
   -webkit-transition-duration: 0.4s;
   transition-duration: 0.3s;
   outline: none;
-} */
+}
 
-#buttonAdd:hover {
+#buttonAdd:hover, #buttonOptimate:hover {
   box-shadow: 0 4px rgba(0,0,0,0.24);
 }
 
-#buttonAdd:active {
+#buttonAdd:active, #buttonOptimate:active {
   transform: translateY(4px);
   box-shadow: 0 0px rgba(0,0,0,0.24);
 }

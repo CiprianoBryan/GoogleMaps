@@ -36,8 +36,7 @@ function updateLocation(request, index) {
 }
 
 function computeTotalDistance(result) {
-  let totalDistance = 0;
-  let totalDuration = 0;
+  totalDistance = 0;
   let myroute = result.routes[0];
   let order = result.routes[0].waypoint_order;
   let waypts = result.geocoded_waypoints;
@@ -46,9 +45,7 @@ function computeTotalDistance(result) {
   }
   for (let i=0; i < nroPoints-1; i++) {
     totalDistance += myroute.legs[i].distance.value;
-    totalDuration += myroute.legs[i].duration.value;
   }
-  totalDuration = totalDuration/60;
   totalDistance = totalDistance/1000;
   document.getElementById('total').innerHTML = totalDistance + ' km';
 }
@@ -56,10 +53,11 @@ function computeTotalDistance(result) {
 var markerInit;
 var pointName;
 var geocoder;
+var totalDistance;
 var directionsService;
 var directionsDisplay;
 var pointAddress;
-// var buttonOptimate;
+var buttonOptimate;
 var buttonAdd;
 var formPoints;
 var nroPoints;
@@ -87,19 +85,15 @@ function initialize() {
       clickable: false,
       strokeColor: '#2C6DAC',
       strokeWeight: 4
-    },
-    markerOptions: {
-      // draggable:true
-      // animation: google.maps.Animation.DROP,
     }
   });
   AutocompleteDirectionsHandler(0);
   AutocompleteDirectionsHandler(1);
-  buttonAdd = document.getElementById('buttonAdd');
-  // buttonOptimate = document.getElementById('buttonOptimate');
   formPoints = document.getElementById('formPoints');
+  buttonAdd = document.getElementById('buttonAdd');
+  buttonOptimate = document.getElementById('buttonOptimate');
   buttonAdd.addEventListener('click', pressButtonAdd, false);
-  // buttonOptimate.addEventListener('click', pressButtonOptimate, false);
+  buttonOptimate.addEventListener('click', pressButtonOptimate, false);
   directionsDisplay.addListener('directions_changed', function() {
     computeTotalDistance(directionsDisplay.getDirections());
   });
@@ -121,17 +115,36 @@ function pressButtonAdd(event) {
   input.setAttribute('placeholder', "Elige un destino");
   formPoints.insertBefore(input, buttonAdd);
   buttonAdd.setAttribute('class', 'disabled');
+  buttonOptimate.setAttribute('class', 'disabled');
   AutocompleteDirectionsHandler(nroPoints);
 }
 
-// function pressButtonOptimate(event) {
-//   var orderedPointLocation = pointLocation;
-//   for(let i=nroPoints-1; i >= 1; i --) {
-//     swap(pointLocation[i], pointLocation[nroPoints-1]);
-//     alert(pointLocation[i]);
-//     alert(orderedPointLocation[i]);
-//   }
-// }
+function pressButtonOptimate(event) {
+  let pointAddressOrig = pointAddress.slice();
+  let index = nroPoints-1 , minDistance = totalDistance;
+  for(let i=nroPoints-1; i >= 1; i --) {
+    let tmp = pointAddress[i];
+    pointAddress[i] = pointAddress[nroPoints-1];
+    pointAddress[nroPoints-1] = tmp;
+    asyncDisplayRoute( callback );
+    if(minDistance > totalDistance) {
+      minDistance = totalDistance;
+      index = i;
+    }
+    pointAddress = pointAddressOrig.slice();
+  }
+  let tmp = pointAddress[index];
+  pointAddress[index] = pointAddress[nroPoints-1];
+  pointAddress[nroPoints-1] = tmp;
+  displayRoute(true);
+}
+
+function asyncDisplayRoute( callback ) {
+}
+
+function callback() {
+  displayRoute(true);
+}
 
 function AutocompleteDirectionsHandler(index) {
   pointInput = document.getElementById(pointName[index]);
@@ -152,6 +165,7 @@ function setupPlaceChangedListener(autocomplete, index) {
     }
     if(nroPoints >= 2) {
       buttonAdd.setAttribute('class', 'enabled');
+      buttonOptimate.setAttribute('class', 'enabled');
     }
     pointAddress[index] = place.formatted_address;
     displayRoute(false);
@@ -177,7 +191,7 @@ function displayRoute(isOptime) {
     destination: pointAddress[nroPoints-1],
     waypoints: waypts,
     travelMode: 'DRIVING',
-    // optimizeWaypoints: isOptime
+    optimizeWaypoints: isOptime
   }, function(response, status) {
     if (status === 'OK') {
       directionsDisplay.setDirections(response);
